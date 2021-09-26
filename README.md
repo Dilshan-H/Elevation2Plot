@@ -28,11 +28,11 @@ Elevation2Plot.py <filename.kmz>
 ----
 ### Elevation plot from **Google Earth**:
 
-![GoogleEarthImage](src\GoogleEarthImage.png)
+![GoogleEarthImage](https://user-images.githubusercontent.com/77499497/134817713-011c5f9c-9236-4be5-9e8c-01d9555512dc.png)
 
 ### Generated plot:
 
-![GoogleEarthImage](src\ElevationPlot.png)
+![GoogleEarthImage](https://user-images.githubusercontent.com/77499497/134817731-f060abae-bd05-48f4-836b-07332ec4508b.png)
 
 ## License
 ----
