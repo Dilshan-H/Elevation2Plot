@@ -1,4 +1,5 @@
 import requests
+import sys
 import json
 import pandas as pd
 from geopy import distance
@@ -12,13 +13,21 @@ distances=[0,]
 elevations=[]
 coorListFull =[]
 
-def parse_kmz(file):
+def parse_kmz():
     """Extract and read coordinates from KML file"""
+    try:
+        file = sys.argv[1]
+    except IndexError:
+        raise SystemExit(f"====\nUsage: {sys.argv[0]} <.kmz file name>\n====")
     with ZipFile(file, 'r') as kmz:
         with kmz.open('doc.kml', 'r') as kml:
+            print("File  successfully loaded...")
             bs_data = bs(kml, 'lxml')
+            print("Listing coordinates...")
             tagData = bs_data.find('coordinates').text.strip().split(' ')
+            print("Requesting elevation data...\nThis might take a moment...")
             get_elevation(tagData)
+            print("Calculating distances...")
             get_distance(coorListFull)
 
 def get_elevation(coorList):
@@ -30,11 +39,10 @@ def get_elevation(coorList):
         query = item.split(',')[1] + ',' + item.split(',')[0]
         coorListFull.append(query)
         uri = f'https://api.open-elevation.com/api/v1/lookup?locations={query}'
-        print(f'Trying ID >> {query}')
+        #print(f'Trying ID >> {query}')
         response = requests.get(uri)
         data = response.json()
         if data['results'] != None:
-            #print(data['results'][0]['elevation'])
             elevations.append(data['results'][0]['elevation'])
 
 def get_distance(coorList):
@@ -43,20 +51,23 @@ def get_distance(coorList):
     while a < len(coorList):
         distances.append(distance.distance(coorList[0], coorList[a]).m)
         a += 1
+    plot(distances, elevations)
 
-parse_kmz('FileName.kmz') 
-#print(elevations, distances)
+def plot(dist, elev):
+    """Generate the plot"""
+    X_Y_Spline = make_interp_spline(dist, elev)
+    X_ = np.linspace(min(distances), max(distances), 30)
+    Y_ = X_Y_Spline(X_)
+    f = plt.figure()
+    f.set_figheight(1)
+    plt.plot(X_, Y_) #Smoother plot [rather than >> plt.plot(distances, elevations)]
 
-##Generating the plot
-X_Y_Spline = make_interp_spline(distances, elevations)
-X_ = np.linspace(min(distances), max(distances), 30)
-Y_ = X_Y_Spline(X_)
-f = plt.figure()
-f.set_figheight(1)
-plt.plot(X_, Y_) #Smoother plot [rather than >> plt.plot(distances, elevations)]
+    plt.title("Elevation Data")
+    plt.xlabel("Distance (m)")
+    plt.ylabel("Elevation (m)")
+    print("Plot successfully generated...")
+    plt.show()
+    print('Done')
 
-plt.title("Elevation Data")
-plt.xlabel("Distance (m)")
-plt.ylabel("Elevation (m)")
-plt.show()
-print('Done')
+if __name__ == '__main__':
+    parse_kmz()
